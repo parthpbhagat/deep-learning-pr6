@@ -10,25 +10,94 @@ A rigorous, production-grade practical exploration of the **Transformer** archit
 ---
 
 ## 📑 Table of Contents
-1. [Repository Structure](#-repository-structure)
-2. [Hugging Face Models Used](#-hugging-face-models-used)
-3. [The 7 Core Concepts Explained](#-the-7-core-concepts-explained)
-4. [Generated Visualizations & Captions](#-generated-visualizations--captions)
-5. [Evaluation & Benchmark Results](#-evaluation--benchmark-results)
-6. [Measured Disadvantages in Practice](#-measured-disadvantages-in-practice)
-7. [Mini Application: `text_toolkit`](#-mini-application-text_toolkit)
-8. [Video Demonstration](#-video-demonstration)
-9. [Installation & Execution](#-installation--execution)
+1. [Project Explanation in Simple English](#-project-explanation-in-simple-english)
+2. [Repository Structure](#-repository-structure)
+3. [Hugging Face Models Used](#-hugging-face-models-used)
+4. [The 7 Core Concepts Explained](#-the-7-core-concepts-explained)
+5. [Generated Visualizations & Captions](#-generated-visualizations--captions)
+6. [Evaluation & Benchmark Results](#-evaluation--benchmark-results)
+7. [Measured Disadvantages in Practice](#-measured-disadvantages-in-practice)
+8. [Mini Application: `text_toolkit`](#-mini-application-text_toolkit)
+9. [Video Demonstration](#-video-demonstration)
+10. [Installation & Execution](#-installation--execution)
+
+---
+
+## 💡 Project Explanation in Simple English
+
+If you are new to Deep Learning or Transformers, here is an easy-to-understand breakdown of what this entire project does:
+
+### 1. What is the Big Goal of this Project?
+Modern AI models like **ChatGPT**, **Google Gemini**, and **Claude** are all built on a deep learning architecture called the **Transformer** (first introduced by Google in 2017).
+
+Before Transformers, computers processed text just like humans read books: **one word at a time, sequentially** using **RNNs (Recurrent Neural Networks)**. Because RNNs worked step-by-step:
+- They were **slow** and could not take full advantage of parallel GPU processing.
+- They had **short memory**—by the time the RNN read the end of a long sentence, it often forgot the context from the beginning.
+
+Transformers revolutionized AI! Instead of reading word-by-word, a Transformer looks at **all words in a sentence at the exact same time in parallel** using a mechanism called **Self-Attention**.
+
+In this lab, rather than treating AI models as black boxes, we:
+1. **Built the mathematical self-attention engine completely from scratch** using basic Python and NumPy.
+2. **Proved our code matches production models** (DistilBERT, GPT-2, and T5) with exact decimal precision.
+3. **Explored where models excel and where they struggle** (context limits, quadratic computation costs, and factual hallucinations).
+4. **Constructed a real-world multi-task AI tool** (`text_toolkit`) that classifies sentiment, summarizes passages, and translates them to French.
+
+---
+
+### 2. How Does Self-Attention Work? (The Library Analogy)
+Imagine you are writing a research paper in a university library. For every word in a sentence, the Transformer creates three vectors:
+- **Query ($Q$)**: *"What kind of information am I looking for?"* (Like entering search keywords into a library search engine).
+- **Key ($K$)**: *"What topic is this book about?"* (Like catalog tags or titles on book covers).
+- **Value ($V$)**: *"What is the actual information inside the book?"* (The actual knowledge stored).
+
+The model computes a dot product between the **Query** of the current word and the **Key** of every other word to measure relevance. When there is a strong match, it absorbs more of that word's **Value**. This lets words understand their true context!
+
+*Example sentence:*
+> *"The animal did not cross the street because **it** was too tired."*
+
+When the model processes the pronoun **"it"**, its Query matches strongly with the Key of **"animal"** (not "street"). The model therefore routes information from "animal" into "it", resolving who was tired.
+
+---
+
+### 3. The Three Model Families (Which one does what?)
+Transformers come in three distinct architectures depending on how attention is applied:
+1. **Encoder-Only (e.g., DistilBERT / BERT)**:
+   - **How it reads**: Reads in both directions at once (bidirectional). Every token can see every other token.
+   - **Best for**: Understanding text, classifying sentiment, extracting named entities.
+   - **In this lab**: We used DistilBERT to classify customer reviews with **89% zero-shot accuracy**.
+2. **Decoder-Only (e.g., GPT-2, ChatGPT, LLaMA)**:
+   - **How it reads**: Reads strictly from left-to-right with a **Causal Mask** that prevents tokens from looking into the future.
+   - **Best for**: Generating new text, storytelling, coding, chat dialogues.
+   - **In this lab**: We built the step-by-step autoregressive generation loop in GPT-2 and verified causal attention.
+3. **Encoder-Decoder (e.g., T5, BART)**:
+   - **How it reads**: An Encoder reads the input sentence completely, and a Decoder generates the response one word at a time using **Cross-Attention** (looking at the source text while writing the target text).
+   - **Best for**: Translation, summarization, text-to-text transformation.
+   - **In this lab**: We used T5 to translate English to French and summarize complex articles.
+
+---
+
+### 4. What Did Our Experiments Reveal?
+- **Our Scratch Math Matches PyTorch Exactly**: Our custom NumPy attention matrix matched Hugging Face's official DistilBERT layer to within $10^{-6}$ decimal precision.
+- **The KV-Cache Speedup**: In autoregressive models like GPT-2, caching past token keys and values made generation **2.25x faster** on CPU.
+- **The Cost of Truncation**: DistilBERT has a hard limit of 512 tokens. Shortening inputs to 64 tokens dropped sentiment accuracy by **6.5%** because critical concluding opinions were cut off.
+- **AI Hallucinations**: When asked *"The capital of Australia is"*, GPT-2 answered *"Sydney"* instead of *"Canberra"*. This proves that generative models predict statistically frequent phrases rather than verifying factual truth.
+
+---
+
+### 5. What Does the Mini Application (`text_toolkit`) Do?
+We bundled these architectures into a single function: `text_toolkit(text)`. You give it any paragraph, and it automatically:
+1. Detects sentiment (Positive or Negative with confidence score).
+2. Generates an abstractive summary.
+3. Translates that summary into French.
+4. Gracefully catches empty inputs and automatically handles documents exceeding the model's context window.
 
 ---
 
 ## 📂 Repository Structure
 
 ```text
-├── DL_PR6.ipynb               # Primary notebook (104 cells, 0 errors, full outputs)
-├── pr6.ipynb                  # Mirror notebook for PR6 submission
-├── DL_PR6.html                # Exported full HTML report with embedded visuals
-├── pr6.html                   # Mirror HTML report
+├── pr6.ipynb                  # Primary comprehensive notebook (104 cells, 0 errors, full outputs)
+├── pr6.html                   # Exported full HTML report with embedded visuals
 ├── plots/                     # 13 High-resolution figures generated during execution
 │   ├── task2_2_attention_matrix_scratch.png
 │   ├── task3_2_real_attention_heads_grid.png
@@ -43,8 +112,6 @@ A rigorous, production-grade practical exploration of the **Transformer** archit
 │   ├── task6_1_confusion_matrix.png
 │   ├── task6_2_truncation_accuracy_vs_length.png
 │   └── task6_3_forward_pass_time_vs_length.png
-├── generate_and_execute_lab.py # Programmatic builder & validation runner
-├── test_all_tasks.py          # Quick pre-flight validation script
 ├── requirements.txt           # Library versions used
 ├── .gitignore                 # Cache and build ignore rules
 └── README.md                  # Comprehensive technical documentation
@@ -172,7 +239,7 @@ The production-ready utility `text_toolkit(text)` orchestrates DistilBERT and T5
 The walkthrough video covers the 7 core concepts with screen and face recordings, followed by a live interactive demo of `text_toolkit`:
 - **Video Filename**: `DL_PR6_YourName_GRID.mp4`
 - **Format**: MP4, 1080p, 5–10 minutes
-- **Video Link**: [Watch the PR6 Project Walkthrough Video](https://drive.google.com/file/d/your-video-link-placeholder/view) *(Paste final hosting link here)*
+- **Video Link**: [Watch the PR6 Project Walkthrough Video](https://drive.google.com/file/d/147WZs2Yw86mwiQEX1SLikGiv0yIFNVjB/view?usp=drive_link)
 
 ---
 
@@ -180,8 +247,8 @@ The walkthrough video covers the 7 core concepts with screen and face recordings
 
 ### 1. Clone Repository & Setup Virtual Environment
 ```bash
-git clone https://github.com/your-username/Transformers_Lab_PR6.git
-cd Transformers_Lab_PR6
+git clone https://github.com/parthpbhagat/deep-learning-pr6.git
+cd deep-learning-pr6
 python -m venv venv
 venv\Scripts\activate   # On Windows
 ```
@@ -193,6 +260,6 @@ pip install -r requirements.txt
 
 ### 3. Run the Jupyter Notebook
 ```bash
-jupyter notebook DL_PR6.ipynb
+jupyter notebook pr6.ipynb
 ```
 Select **Kernel > Restart & Run All** to execute all 104 cells cleanly with zero errors.
